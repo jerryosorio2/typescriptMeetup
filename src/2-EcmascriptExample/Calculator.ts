@@ -18,3 +18,6 @@ function divide(n1: number, n2: number): number {
 }
 
 console.log(`add result: ${add(number1, number2)}`);
+console.log(`subtract result: ${substract(number1, number2)}`);
+console.log(`multiply result: ${multiply(number1, number2)}`);
+console.log(`divide result: ${divide(number1, number2)}`);

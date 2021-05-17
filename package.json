@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node"
+    "test": "ts-node",
+    "clean": "rm -rf dist"
   },
   "author": "Jerry Osorio",
   "license": "ISC",
