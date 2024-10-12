@@ -23,9 +23,10 @@ jobs:
         run: |
           base64 report.html > report_base64.txt
 
-      # Step to log the base64 content
+      # Step to log the base64 content for debugging
       - name: Show Base64 Content
         run: |
+          echo "Base64 Content:"
           cat report_base64.txt
 
       # Step to send the email using SendGrid with the HTML report attached
@@ -49,7 +50,7 @@ jobs:
             }],
             "attachments": [{
               "content": "'"$base64_content"'",
-              "type": "text/html",
+              "type": "application/octet-stream",
               "filename": "report.html",
               "disposition": "attachment"
             }]
