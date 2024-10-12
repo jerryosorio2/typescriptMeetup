@@ -16,7 +16,7 @@ jobs:
         run: |
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
-          --header "Authorization: Bearer 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" \
+          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
           --header 'Content-Type: application/json' \
           --data '{
             "personalizations": [{
