@@ -1,19 +1,13 @@
-name: Hello World Workflow
+name: Manual Trigger Workflow
 
-# Run the workflow when pushing code or on pull requests to the main branch
+# Allows the workflow to be triggered manually
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   say-hello:
     runs-on: ubuntu-latest
 
     steps:
-      # Step to output "Hello, World!"
       - name: Hello World
         run: echo "Hello, World!"
