@@ -1,4 +1,4 @@
-name: Send Email with SendGrid
+name: Send Email with HTML Report Attachment
 
 on:
   workflow_dispatch:
@@ -12,7 +12,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send Email via SendGrid
+      # Step to generate the HTML file
+      - name: Generate HTML Document
+        run: |
+          echo "<html><body><h1>Hello from GitHub Actions!</h1><p>This is a dynamically generated HTML file.</p></body></html>" > report.html
+
+      # Step to upload the HTML file as an artifact
+      - name: Upload HTML Document
+        uses: actions/upload-artifact@v3
+        with:
+          name: report-html
+          path: report.html
+
+      # Step to base64 encode the HTML file
+      - name: Encode HTML Document to Base64
+        id: encode
+        run: |
+          base64 report.html > report_base64.txt
+
+      # Step to send the email using SendGrid with the HTML report attached
+      - name: Send Email with Attachment via SendGrid
         run: |
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
@@ -21,11 +40,17 @@ jobs:
           --data '{
             "personalizations": [{
               "to": [{"email": "${{ github.event.inputs.recipient_email }}"}],
-              "subject": "Hello from GitHub Actions"
+              "subject": "HTML Report from GitHub Actions"
             }],
-            "from": {"email": "jerry.osorio2aw@gmail.com"},
+            "from": {"email": "your-email@example.com"},
             "content": [{
               "type": "text/plain",
-              "value": "This is a test email sent from a GitHub Actions workflow."
+              "value": "Please find the HTML report attached."
+            }],
+            "attachments": [{
+              "content": "'"$(cat report_base64.txt)"'",
+              "type": "text/html",
+              "filename": "report.html",
+              "disposition": "attachment"
             }]
           }'
