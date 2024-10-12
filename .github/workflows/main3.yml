@@ -1,0 +1,130 @@
+name: Send Email with Fake Newman Report and Screenshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_email:
+        description: "Recipient email address"
+        required: true
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step to install Puppeteer
+      - name: Install Puppeteer
+        run: |
+          npm install puppeteer
+
+      # Step to generate a fake Newman report that mimics htmlextra report structure
+      - name: Generate Fake Newman htmlextra Report
+        run: |
+          echo "<html>
+            <head>
+              <title>Newman Test Report</title>
+              <style>
+                body { font-family: Arial, sans-serif; }
+                h1 { color: #333; }
+                .summary { border-collapse: collapse; width: 100%; }
+                .summary th, .summary td { border: 1px solid #ddd; padding: 8px; }
+                .summary th { background-color: #f2f2f2; }
+              </style>
+            </head>
+            <body>
+              <h1>Newman Test Report</h1>
+              <h2>Summary</h2>
+              <table class='summary'>
+                <tr>
+                  <th>Total Tests</th>
+                  <th>Passed</th>
+                  <th>Failed</th>
+                  <th>Skipped</th>
+                </tr>
+                <tr>
+                  <td>20</td>
+                  <td>18</td>
+                  <td>2</td>
+                  <td>0</td>
+                </tr>
+              </table>
+              <h2>Test Results</h2>
+              <p>Details of the test execution can go here.</p>
+              <h3>Test Cases</h3>
+              <ul>
+                <li>GET /api/test1 - Passed</li>
+                <li>POST /api/test2 - Failed</li>
+                <li>GET /api/test3 - Passed</li>
+              </ul>
+            </body>
+          </html>" > fake_report.html
+
+      # Step to take a screenshot of the rendered HTML using Puppeteer
+      - name: Take Screenshot of Fake Report
+        run: |
+          node -e "
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch();
+            const page = await browser.newPage();
+            await page.goto('file://' + process.cwd() + '/fake_report.html', { waitUntil: 'networkidle2' });
+            await page.screenshot({ path: 'fake_report.png', fullPage: true });
+            await browser.close();
+          })();"
+
+      # Step to base64 encode the fake report file without newlines
+      - name: Encode Fake Report Document to Base64
+        id: encode
+        run: |
+          base64 fake_report.html | tr -d '\n' > fake_report_base64.txt
+
+      # Step to base64 encode the screenshot
+      - name: Encode Screenshot to Base64
+        run: |
+          base64 fake_report.png | tr -d '\n' > screenshot_base64.txt
+
+      # Step to log the base64 content for debugging
+      - name: Show Base64 Content
+        run: |
+          echo "Base64 Report Content:"
+          cat fake_report_base64.txt
+          echo "Base64 Screenshot Content:"
+          cat screenshot_base64.txt
+
+      # Step to send the email using SendGrid with the fake report and screenshot attached
+      - name: Send Email with Attachment via SendGrid
+        run: |
+          report_base64_content=$(cat fake_report_base64.txt)
+          screenshot_base64_content=$(cat screenshot_base64.txt)
+          echo "Base64 content length: ${#report_base64_content}"
+          echo "Base64 screenshot length: ${#screenshot_base64_content}"
+          curl -X POST \
+          --url https://api.sendgrid.com/v3/mail/send \
+          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "personalizations": [{
+              "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
+              "subject": "Fake Newman htmlextra Report from GitHub Actions"
+            }],
+            "from": {"email": "jerry.osorio2aw@gmail.com"},
+            "content": [{
+              "type": "text/plain",
+              "value": "Please find the fake Newman htmlextra report attached."
+            }],
+            "attachments": [{
+              "content": "'"$report_base64_content"'",
+              "type": "text/html",
+              "filename": "fake_report.html",
+              "disposition": "attachment"
+            }, {
+              "content": "'"$screenshot_base64_content"'",
+              "type": "image/png",
+              "filename": "fake_report.png",
+              "disposition": "attachment"
+            }],
+            "content": [{
+              "type": "text/html",
+              "value": "<html><body><h1>Newman Test Report</h1><img src=\"data:image/png;base64, '"$screenshot_base64_content"'\" alt=\"Fake Report Screenshot\" /></body></html>"
+            }]
+          }'
