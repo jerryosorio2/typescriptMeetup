@@ -3,6 +3,10 @@ name: Manual Trigger Workflow
 # Allows the workflow to be triggered manually
 on:
   workflow_dispatch:
+  inputs:
+      recipient_email:
+        description: "Recipient email address"
+        required: true
 
 jobs:
   say-hello:
@@ -15,7 +19,7 @@ jobs:
         run: |
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
-          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
+          --header "Authorization: Bearer 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" \
           --header 'Content-Type: application/json' \
           --data '{
             "personalizations": [{
