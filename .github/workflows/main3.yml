@@ -131,3 +131,29 @@ jobs:
               "value": "<html><body><h1>Newman Test Report</h1><img src=\"data:image/png;base64, '"$screenshot_base64_content"'\" alt=\"Fake Report Screenshot\" /></body></html>"
             }]
           }'
+            # Step to send the email using SendGrid
+      - name: 22Send Email with Embedded Image via SendGrid
+        run: |
+          image_base64_content="$screenshot_base64_content"
+          curl -X POST \
+          --url https://api.sendgrid.com/v3/mail/send \
+          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "personalizations": [{
+              "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
+              "subject": "Email with Embedded Image"
+            }],
+            "from": {"email": "jerry.osorio2aw@gmail.com"},
+            "content": [{
+              "type": "text/html",
+              "value": "<html><body><h1>Hello!</h1><p>This is an embedded image:</p><img src=\"data:image/png;base64, '"$image_base64_content"'\" alt=\"Embedded Image\" /></body></html>"
+            }],
+            "attachments": [{
+              "content": "'"$image_base64_content"'",
+              "type": "image/png",
+              "filename": "sample_image.png",
+              "disposition": "inline",
+              "content_id": "embedded_image"
+            }]
+          }'
