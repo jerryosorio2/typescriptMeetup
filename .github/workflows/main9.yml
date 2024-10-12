@@ -1,0 +1,51 @@
+name: Send Email with Embedded Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_email:
+        description: "Recipient email address"
+        required: true
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step to generate an image (replace this with your image generation logic)
+      - name: Create Sample Image
+        run: |
+          echo "Creating a sample image."
+          convert -size 100x100 xc:blue sample_image.png
+
+      # Step to encode the image to Base64
+      - name: Encode Image to Base64
+        run: |
+          base64 sample_image.png | tr -d '\n' > image_base64.txt
+
+      # Step to send the email using SendGrid
+      - name: Send Email with Embedded Image via SendGrid
+        run: |
+          image_base64_content=$(cat image_base64.txt)
+          curl -X POST \
+          --url https://api.sendgrid.com/v3/mail/send \
+          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "personalizations": [{
+              "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
+              "subject": "Email with Embedded Image"
+            }],
+            "from": {"email": "your_email@example.com"},
+            "content": [{
+              "type": "text/html",
+              "value": "<html><body><h1>Hello!</h1><p>This is an embedded image:</p><img src=\"data:image/png;base64, '"$image_base64_content"'\" alt=\"Embedded Image\" /></body></html>"
+            }],
+            "attachments": [{
+              "content": "'"$image_base64_content"'",
+              "type": "image/png",
+              "filename": "sample_image.png",
+              "disposition": "inline",
+              "content_id": "embedded_image"
+            }]
+          }'
