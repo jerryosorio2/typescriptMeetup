@@ -1,20 +1,17 @@
-name: Manual Trigger Workflow
+name: Send Email with SendGrid
 
-# Allows the workflow to be triggered manually
 on:
   workflow_dispatch:
-  inputs:
+    inputs:
       recipient_email:
         description: "Recipient email address"
         required: true
 
 jobs:
-  say-hello:
+  send-email:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Hello World
-        run: echo "Hello, World!"
       - name: Send Email via SendGrid
         run: |
           curl -X POST \
