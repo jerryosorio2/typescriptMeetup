@@ -12,9 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step to send a simple email using SendGrid
-      - name: Send Simple Email via SendGrid
+      # Step to send the email using SendGrid with the HTML report attached
+      - name: Send Email with Attachment via SendGrid
         run: |
+          base64_content=$(cat report_base64.txt)
+          echo "Base64 content length: ${#base64_content}"
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
           --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
@@ -22,11 +24,17 @@ jobs:
           --data '{
             "personalizations": [{
               "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
-              "subject": "Test Email from GitHub Actions"
+              "subject": "HTML Report from GitHub Actions"
             }],
-            "from": {"email": "jerry.osorio2aw@gmail.com"},
+            "from": {"email": "jerry.osorio2aw@example.com"},
             "content": [{
               "type": "text/plain",
-              "value": "This is a test email."
+              "value": "Please find the HTML report attached."
+            }],
+            "attachments": [{
+              "content": "'"$base64_content"'",
+              "type": "text/html",
+              "filename": "report.html",
+              "disposition": "attachment"
             }]
           }'
