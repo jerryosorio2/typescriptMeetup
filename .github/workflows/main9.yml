@@ -42,7 +42,7 @@ jobs:
               "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
               "subject": "Email with Embedded Image"
             }],
-            "from": {"email": "your_email@example.com"},
+            "from": {"email": "jerry.osorio2aw@gmail.com"},
             "content": [{
               "type": "text/html",
               "value": "<html><body><h1>Hello!</h1><p>This is an embedded image:</p><img src=\"data:image/png;base64, '"$image_base64_content"'\" alt=\"Embedded Image\" /></body></html>"
