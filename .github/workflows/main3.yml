@@ -75,4 +75,59 @@ jobs:
             await browser.close();
           })();"
 
-      # Step to base64 encode the fake report file without new
+      # Step to base64 encode the fake report file without newlines
+      - name: Encode Fake Report Document to Base64
+        id: encode
+        run: |
+          base64 fake_report.html | tr -d '\n' > fake_report_base64.txt
+
+      # Step to base64 encode the screenshot
+      - name: Encode Screenshot to Base64
+        run: |
+          base64 fake_report.png | tr -d '\n' > screenshot_base64.txt
+
+      # Step to log the base64 content for debugging
+      - name: Show Base64 Content
+        run: |
+          echo "Base64 Report Content:"
+          cat fake_report_base64.txt
+          echo "Base64 Screenshot Content:"
+          cat screenshot_base64.txt
+
+      # Step to send the email using SendGrid with the fake report and screenshot attached
+      - name: Send Email with Attachment via SendGrid
+        run: |
+          report_base64_content=$(cat fake_report_base64.txt)
+          screenshot_base64_content=$(cat screenshot_base64.txt)
+          echo "Base64 content length: ${#report_base64_content}"
+          echo "Base64 screenshot length: ${#screenshot_base64_content}"
+          curl -X POST \
+          --url https://api.sendgrid.com/v3/mail/send \
+          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "personalizations": [{
+              "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
+              "subject": "Fake Newman htmlextra Report from GitHub Actions"
+            }],
+            "from": {"email": "jerry.osorio2aw@gmail.com"},
+            "content": [{
+              "type": "text/plain",
+              "value": "Please find the fake Newman htmlextra report attached."
+            }],
+            "attachments": [{
+              "content": "'"$report_base64_content"'",
+              "type": "text/html",
+              "filename": "fake_report.html",
+              "disposition": "attachment"
+            }, {
+              "content": "'"$screenshot_base64_content"'",
+              "type": "image/png",
+              "filename": "fake_report.png",
+              "disposition": "attachment"
+            }],
+            "content": [{
+              "type": "text/html",
+              "value": "<html><body><h1>Newman Test Report</h1><img src=\"data:image/png;base64, '"$screenshot_base64_content"'\" alt=\"Fake Report Screenshot\" /></body></html>"
+            }]
+          }'
