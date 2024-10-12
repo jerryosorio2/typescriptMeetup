@@ -65,4 +65,14 @@ jobs:
           node -e "
           const puppeteer = require('puppeteer');
           (async () => {
-            const
+            const browser = await puppeteer.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+            });
+            const page = await browser.newPage();
+            await page.goto('file://' + process.cwd() + '/fake_report.html', { waitUntil: 'networkidle2' });
+            await page.screenshot({ path: 'fake_report.png', fullPage: true });
+            await browser.close();
+          })();"
+
+      # Step to base64 encode the fake report file without new
