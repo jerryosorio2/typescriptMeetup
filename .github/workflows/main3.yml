@@ -152,7 +152,7 @@ jobs:
             "attachments": [{
               "content": "'"$image_base64_content"'",
               "type": "image/png",
-              "filename": "sample_image.png",
+              "filename": "fake_report.png",
               "disposition": "inline",
               "content_id": "embedded_image"
             }]
