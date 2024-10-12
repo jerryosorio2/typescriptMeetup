@@ -78,6 +78,7 @@ jobs:
       # Step to send the email using SendGrid with the fake report and screenshot attached
       - name: Send Email with Attachment via SendGrid
         run: |
+          # Create the email payload using jq
           email_payload=$(jq -n \
             --arg to_email "${{ github.event.inputs.recipient_email }}" \
             --arg from_email "jerry.osorio2aw@gmail.com" \
@@ -96,6 +97,10 @@ jobs:
               ]
             }')
 
+          # Print the email payload for debugging
+          echo "Email Payload: $email_payload"
+
+          # Send the email using SendGrid
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
           --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
@@ -105,3 +110,4 @@ jobs:
           --form 'content=[{"type":"text/plain","value":"Please find the fake Newman htmlextra report attached."},{"type":"text/html","value":"<html><body><h1>Newman Test Report</h1><img src=\"cid:fake_report.png\" alt=\"Fake Report Screenshot\" /></body></html>"}]' \
           --form 'attachments=@fake_report.png;type=image/png;filename="fake_report.png"' \
           --form 'attachments=@fake_report.html;type=text/html;filename="fake_report.html"'
+
