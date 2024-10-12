@@ -78,11 +78,29 @@ jobs:
       # Step to send the email using SendGrid with the fake report and screenshot attached
       - name: Send Email with Attachment via SendGrid
         run: |
+          email_payload=$(jq -n \
+            --arg to_email "${{ github.event.inputs.recipient_email }}" \
+            --arg from_email "jerry.osorio2aw@gmail.com" \
+            --arg report_content "<html><body><h1>Newman Test Report</h1><img src=\"cid:fake_report.png\" alt=\"Fake Report Screenshot\" /></body></html>" \
+            '{
+              personalizations: [
+                {
+                  to: [{ email: $to_email }],
+                  subject: "Fake Newman htmlextra Report from GitHub Actions"
+                }
+              ],
+              from: { email: $from_email },
+              content: [
+                { type: "text/plain", value: "Please find the fake Newman htmlextra report attached." },
+                { type: "text/html", value: $report_content }
+              ]
+            }')
+
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
           --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
           --header 'Content-Type: multipart/form-data' \
-          --form 'personalizations=[{"to":[{"email":"'"${{ github.event.inputs.recipient_email }}"'"}],"subject":"Fake Newman htmlextra Report from GitHub Actions"}]' \
+          --form "personalizations=${email_payload}" \
           --form 'from={"email":"jerry.osorio2aw@gmail.com"}' \
           --form 'content=[{"type":"text/plain","value":"Please find the fake Newman htmlextra report attached."},{"type":"text/html","value":"<html><body><h1>Newman Test Report</h1><img src=\"cid:fake_report.png\" alt=\"Fake Report Screenshot\" /></body></html>"}]' \
           --form 'attachments=@fake_report.png;type=image/png;filename="fake_report.png"' \
