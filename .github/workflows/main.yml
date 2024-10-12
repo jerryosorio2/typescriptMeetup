@@ -17,11 +17,11 @@ jobs:
         run: |
           echo "<html><body><h1>Hello from GitHub Actions!</h1><p>This is a dynamically generated HTML file.</p></body></html>" > report.html
 
-      # Step to base64 encode the HTML file
+      # Step to base64 encode the HTML file without newlines
       - name: Encode HTML Document to Base64
         id: encode
         run: |
-          base64 report.html > report_base64.txt
+          base64 report.html | tr -d '\n' > report_base64.txt
 
       # Step to log the base64 content for debugging
       - name: Show Base64 Content
