@@ -1,0 +1,87 @@
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_email:
+        description: "Recipient email address"
+        required: true
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step to install Puppeteer
+      - name: Install Puppeteer
+        run: |
+          npm install puppeteer
+
+      # Step to generate a fake Newman report
+      - name: Generate Fake Newman htmlextra Report
+        run: |
+          echo "<html>
+            <head>
+              <title>Newman Test Report</title>
+              <style>
+                body { font-family: Arial, sans-serif; }
+                h1 { color: #333; }
+                .summary { border-collapse: collapse; width: 100%; }
+                .summary th, .summary td { border: 1px solid #ddd; padding: 8px; }
+                .summary th { background-color: #f2f2f2; }
+              </style>
+            </head>
+            <body>
+              <h1>Newman Test Report</h1>
+              <h2>Summary</h2>
+              <table class='summary'>
+                <tr>
+                  <th>Total Tests</th>
+                  <th>Passed</th>
+                  <th>Failed</th>
+                  <th>Skipped</th>
+                </tr>
+                <tr>
+                  <td>20</td>
+                  <td>18</td>
+                  <td>2</td>
+                  <td>0</td>
+                </tr>
+              </table>
+              <h2>Test Results</h2>
+              <p>Details of the test execution can go here.</p>
+              <h3>Test Cases</h3>
+              <ul>
+                <li>GET /api/test1 - Passed</li>
+                <li>POST /api/test2 - Failed</li>
+                <li>GET /api/test3 - Passed</li>
+              </ul>
+            </body>
+          </html>" > fake_report.html
+
+      # Step to take a screenshot of the rendered HTML using Puppeteer
+      - name: Take Screenshot of Fake Report
+        run: |
+          node -e "
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+            });
+            const page = await browser.newPage();
+            await page.goto('file://' + process.cwd() + '/fake_report.html', { waitUntil: 'networkidle2' });
+            await page.screenshot({ path: 'fake_report.png', fullPage: true });
+            await browser.close();
+          })();"
+
+      # Step to send the email using SendGrid with the fake report and screenshot attached
+      - name: Send Email with Attachment via SendGrid
+        run: |
+          curl -X POST \
+          --url https://api.sendgrid.com/v3/mail/send \
+          --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
+          --header 'Content-Type: multipart/form-data' \
+          --form 'personalizations=[{"to":[{"email":"'"${{ github.event.inputs.recipient_email }}"'"}],"subject":"Fake Newman htmlextra Report from GitHub Actions"}]' \
+          --form 'from={"email":"jerry.osorio2aw@gmail.com"}' \
+          --form 'content=[{"type":"text/plain","value":"Please find the fake Newman htmlextra report attached."},{"type":"text/html","value":"<html><body><h1>Newman Test Report</h1><img src=\"cid:fake_report.png\" alt=\"Fake Report Screenshot\" /></body></html>"}]' \
+          --form 'attachments=@fake_report.png;type=image/png;filename="fake_report.png"' \
+          --form 'attachments=@fake_report.html;type=text/html;filename="fake_report.html"'
