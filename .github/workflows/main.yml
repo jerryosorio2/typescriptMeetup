@@ -1,4 +1,4 @@
-name: Send Simple Email with SendGrid
+name: Send Email with HTML Report Attachment
 
 on:
   workflow_dispatch:
@@ -12,6 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step to generate the HTML file
+      - name: Generate HTML Document
+        run: |
+          echo "<html><body><h1>Hello from GitHub Actions!</h1><p>This is a dynamically generated HTML file.</p></body></html>" > report.html
+
+      # Step to base64 encode the HTML file
+      - name: Encode HTML Document to Base64
+        id: encode
+        run: |
+          base64 report.html > report_base64.txt
+
+      # Step to log the base64 content
+      - name: Show Base64 Content
+        run: |
+          cat report_base64.txt
+
       # Step to send the email using SendGrid with the HTML report attached
       - name: Send Email with Attachment via SendGrid
         run: |
@@ -26,7 +42,7 @@ jobs:
               "to": [{"email": "'"${{ github.event.inputs.recipient_email }}"'"}],
               "subject": "HTML Report from GitHub Actions"
             }],
-            "from": {"email": "jerry.osorio2aw@example.com"},
+            "from": {"email": "jerry.osorio2aw@gmail.com"},
             "content": [{
               "type": "text/plain",
               "value": "Please find the HTML report attached."
