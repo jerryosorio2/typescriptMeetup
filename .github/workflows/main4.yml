@@ -99,8 +99,14 @@ jobs:
         run: |
           report_base64_content=$(cat fake_report_base64.txt)
           screenshot_base64_content=$(cat screenshot_base64.txt)
+
+          # Trim any whitespace/newlines from the base64 content
+          report_base64_content=$(echo "$report_base64_content" | tr -d '\n')
+          screenshot_base64_content=$(echo "$screenshot_base64_content" | tr -d '\n')
+
           echo "Base64 content length: ${#report_base64_content}"
           echo "Base64 screenshot length: ${#screenshot_base64_content}"
+          
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
           --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
@@ -123,6 +129,6 @@ jobs:
             }],
             "content": [{
               "type": "text/html",
-              "value": "<html><body><h1>Newman Test Report</h1><img src=\"data:image/png;base64, '"$screenshot_base64_content"'\" alt=\"Fake Report Screenshot\" /></body></html>"
+              "value": "<html><body><h1>Newman Test Report</h1><img src=\"data:image/png;base64,'"${screenshot_base64_content}"'\" alt=\"Fake Report Screenshot\" /></body></html>"
             }]
           }'
