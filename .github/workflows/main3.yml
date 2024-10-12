@@ -134,7 +134,7 @@ jobs:
             # Step to send the email using SendGrid
       - name: 22Send Email with Embedded Image via SendGrid
         run: |
-          image_base64_content="$screenshot_base64_content"
+          image_base64_content=$(cat fake_report_base64.txt)
           curl -X POST \
           --url https://api.sendgrid.com/v3/mail/send \
           --header "Authorization: Bearer ${{ secrets.SENDGRID_API_KEY }}" \
