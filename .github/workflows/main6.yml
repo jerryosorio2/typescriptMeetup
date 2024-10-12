@@ -1,3 +1,5 @@
+name: 7Send Email with Fake Newman Report and Screenshot
+
 on:
   workflow_dispatch:
     inputs:
