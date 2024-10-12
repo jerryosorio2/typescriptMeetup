@@ -23,7 +23,7 @@ jobs:
               "to": [{"email": "${{ github.event.inputs.recipient_email }}"}],
               "subject": "Hello from GitHub Actions"
             }],
-            "from": {"email": "your-email@example.com"},
+            "from": {"email": "jerry.osorio2@gmail.com"},
             "content": [{
               "type": "text/plain",
               "value": "This is a test email sent from a GitHub Actions workflow."
